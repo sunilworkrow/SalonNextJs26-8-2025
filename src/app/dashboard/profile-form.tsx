@@ -93,7 +93,9 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
 
   return (
     <div className="max-w-4xl mx-auto">
+
       {/* Profile Header */}
+
       <div className={`${darkMode ? "bg-[#1a1a1a]" : "bg-white"} rounded-lg p-6 mb-6 border ${darkMode ? "border-gray-800" : "border-gray-200"}`}>
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
@@ -101,7 +103,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
               {formData.image ? (
                 <img src={formData.image} alt="Profile" className="w-full h-full object-cover rounded-full" />
               ) : (
-                <span className="text-white font-bold text-2xl">{user?.name}</span>
+                <span className="text-white font-bold text-2xl"></span>
               )}
             </div>
             <button
@@ -127,6 +129,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
       </div>
 
       {/* Tabs */}
+      
       <div className={`${darkMode ? "bg-[#1a1a1a]" : "bg-white"} rounded-lg border ${darkMode ? "border-gray-800" : "border-gray-200"} mb-6`}>
         <div className="flex border-b border-gray-800">
           {tabs.map((tab) => (
@@ -158,7 +161,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
                     
-                    className={`w-full px-3 py-2 rounded-lg border text-[#9c9c9c] ${
+                    className={`w-full px-3 py-2 rounded-lg border ${
                       darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
@@ -201,7 +204,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                   </label>
                   <input
                     type="email"
-                    value={user?.email}
+                    value={user?.email || ""}
                     disabled
                     className={`w-full px-3 py-2 rounded-lg border text-[#9c9c9c] ${
                       darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"

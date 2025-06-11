@@ -1,71 +1,116 @@
+// app/login/page.tsx
 "use client"
 
-import { useState } from "react"
-import { CiLock, CiMail, CiUser } from "react-icons/ci"
-import Link from "next/link"
+import { useState } from "react";
+import { CiLock, CiMail } from "react-icons/ci";
+import Link from "next/link";
 import { useRouter } from 'next/navigation';
+import Modal from "../components/login-modal"; 
+
+export default function LoginPage() { 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
 
-export default function page() {
-
-
-
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState("")
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState<"success" | "error" | "warning" | null>(null);
+  const [modalMessage, setModalMessage] = useState(""); 
 
   const router = useRouter();
 
+  const validate = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    let hasError = false;
+
+    if (!email.trim()) {
+      newErrors.email = "Email is required";
+      hasError = true;
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Email is invalid";
+      hasError = true;
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required";
+      hasError = true;
+    }
+
+    setErrors(newErrors);
+
+    if (hasError) {
+      setModalMessage("Please correct the errors in the form.");
+      setModalType("error");
+      setShowModal(true);
+    } else {
+      setShowModal(false); 
+    }
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async () => {
-    setLoading(true)
-    setMessage("")
+    
+    setShowModal(false);
+    setModalType(null);
+    setModalMessage("");
+    setErrors({}); 
 
+    if (!validate()) {
+      return; 
+    }
 
+    setLoading(true);
 
     try {
-
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-
       const data = await res.json();
 
       if (data.success) {
-
-
         localStorage.setItem('token', data.token);
-
-        setMessage("User Login successfully")
-
-        router.push('/dashboard');
-
+        setModalMessage("You've successfully logged in. Redirecting you to your dashboard...");
+        setModalType("success");
+        setShowModal(true);
+        // setTimeout(() => router.push('/dashboard'), 2000); // Redirect handled by Modal's onContinue
       } else {
-        alert(data.message);
+        setModalMessage(data.message || "Login failed. Please check your credentials.");
+        setModalType("error");
+        setShowModal(true);
       }
 
-
     } catch (err) {
-      setMessage("Something went wrong")
+      setModalMessage("Something went wrong. Please try again later.");
+      setModalType("error");
+      setShowModal(true);
     }
 
+    setLoading(false);
+  };
 
-    setLoading(false)
+  const handleModalClose = () => {
+    setShowModal(false);
+    
+    if (modalType === "error") {
+      setErrors({});
+    }
+  };
 
-
-
-  }
-
-
-
+  const handleModalContinue = () => {
+    setShowModal(false);
+    if (modalType === "success") {
+      router.push("/dashboard"); 
+    }
+  };
 
 
   return (
     <div className="min-h-screen flex flex-row-reverse">
-
       <div className="flex-1 flex items-center justify-center bg-gray-50 relative">
         <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full -translate-x-16 -translate-y-16"></div>
 
@@ -73,56 +118,66 @@ export default function page() {
           <h2 className="text-2xl font-semibold text-gray-800 mb-8 text-center">Login</h2>
 
           <div className="space-y-6">
-
-
             {/* Email */}
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <CiMail className="h-5 w-5 text-gray-400" />
+            <div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <CiMail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Input your Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`pl-12 h-12 rounded-lg w-full bg-[aliceblue] border-l-4 ${
+                    errors.email ? "border-l-red-500" : "border-l-blue-500"
+                  }`}
+                />
               </div>
-              <input
-                type="email"
-                placeholder="Input your Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-12 h-12 border-l-4 border-l-blue-500 rounded-lg w-full bg-[aliceblue]"
-              />
+              {/* Note: Client-side errors are now shown in the Modal, so these lines might be redundant
+               but keeping them for immediate form feedback if preferred. */}
+              {/* {errors.email && <p className="text-red-500 text-sm mt-2 pl-2">{errors.email}</p>} */}
             </div>
 
             {/* Password */}
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <CiLock className="h-5 w-5 text-gray-400" />
+            <div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <CiLock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  placeholder="Input your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`pl-12 h-12 rounded-lg w-full bg-[aliceblue] border-l-4 ${
+                    errors.password ? "border-l-red-500" : "border-l-blue-500"
+                  }`}
+                />
               </div>
-              <input
-                type="password"
-                placeholder="Input your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-12 h-12 border-l-4 border-l-blue-500 rounded-lg w-full bg-[aliceblue]"
-              />
+              {/* {errors.password && <p className="text-red-500 text-sm mt-2 pl-2">{errors.password}</p>} */}
             </div>
 
-            
-
-            {/* Signup Button */}
+            {/* Login Button */}
             <button
               onClick={handleSubmit}
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
+              disabled={loading}
             >
               {loading ? "Processing..." : "LOGIN"}
             </button>
 
-            {/* Message */}
-            {message && (
+            {/* Message (Optional: remove if all messages are handled by modal) */}
+            {/* {message && (
               <div className="text-center mt-4 text-sm text-gray-700">{message}</div>
-            )}
-<div className="text-center text-blue-600  ">
-            <Link href="/forgot-password">
-              <button className="underline cursor-pointer">
-                Forgot password
-              </button>
-            </Link>
+            )} */}
+
+            <div className="text-center text-blue-600">
+              <Link href="/forgot-password">
+                <button className="underline cursor-pointer">
+                  Forgot password
+                </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -145,6 +200,17 @@ export default function page() {
           </Link>
         </div>
       </div>
+
+      {/* Generic Modal */}
+      {showModal && (
+        <Modal
+          modalType={modalType}
+          message={modalMessage}
+          errors={errors} 
+          onClose={handleModalClose}
+          onContinue={handleModalContinue}
+        />
+      )}
     </div>
-  )
+  );
 }

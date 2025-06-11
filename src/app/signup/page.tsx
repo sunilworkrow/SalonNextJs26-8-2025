@@ -3,19 +3,49 @@
 import { useState } from "react"
 import { CiLock, CiMail, CiUser } from "react-icons/ci"
 import Link from "next/link"
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation"
+import Modal from "../components/signup-modal"  // yaha modal ko import karein
 
 export default function SignupPage() {
-
-const router = useRouter()
+  const router = useRouter()
 
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
+  const [showModal, setShowModal] = useState(false)
+  const [modalType, setModalType] = useState<"success" | "error" | "warning" | null>(null)
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({})
+
+  const validate = () => {
+    const newErrors: { name?: string; email?: string; password?: string } = {}
+
+    if (!name.trim()) newErrors.name = "Name is required"
+    if (!email.trim()) {
+      newErrors.email = "Email is required"
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Email is invalid"
+    }
+
+    if (!password) {
+      newErrors.password = "Password is required"
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters"
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async () => {
+    if (!validate()) {
+      setMessage("Please fix the errors below")
+      setModalType("error")
+      setShowModal(true)
+      return
+    }
+
     setLoading(true)
     setMessage("")
 
@@ -35,19 +65,38 @@ const router = useRouter()
         setName("")
         setEmail("")
         setPassword("")
-
-
+        setErrors({})
+        setModalType("success")
+        setShowModal(true)
       } else {
-        setMessage(`${data.message}`)
+        if (data.message && data.message.toLowerCase().includes("email already exists")) {
+          setMessage(data.message)
+          setModalType("warning")
+          setShowModal(true)
+        } else {
+          setMessage(data.message || "Something went wrong")
+          setModalType("error")
+          setShowModal(true)
+        }
       }
-
-      router.push("/login");
-
     } catch (err) {
       setMessage("Something went wrong")
+      setModalType("error")
+      setShowModal(true)
     }
 
     setLoading(false)
+  }
+
+  const handleModalClose = () => {
+    setShowModal(false)
+  }
+
+  const handleModalContinue = () => {
+    setShowModal(false)
+    if (modalType === "success" || modalType === "warning") {
+      router.push("/login")
+    }
   }
 
   return (
@@ -61,45 +110,57 @@ const router = useRouter()
 
           <div className="space-y-6">
             {/* Name */}
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <CiUser className="h-5 w-5 text-gray-400" />
+            <div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <CiUser className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className={`focus:outline-none pl-12 h-12 rounded-lg w-full bg-[aliceblue] border-l-4 ${
+                    errors.name ? "border-l-red-500" : "border-l-green-500"
+                  }`}
+                />
               </div>
-              <input
-                type="text"
-                placeholder="Enter your full name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="pl-12 h-12 border-l-4 border-l-green-500 rounded-lg w-full bg-[aliceblue]"
-              />
             </div>
 
             {/* Email */}
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <CiMail className="h-5 w-5 text-gray-400" />
+            <div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <CiMail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="email"
+                  placeholder="Input your Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={`focus:outline-none pl-12 h-12 rounded-lg w-full bg-[aliceblue] border-l-4 ${
+                    errors.email ? "border-l-red-500" : "border-l-blue-500"
+                  }`}
+                />
               </div>
-              <input
-                type="email"
-                placeholder="Input your Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-12 h-12 border-l-4 border-l-blue-500 rounded-lg w-full bg-[aliceblue]"
-              />
             </div>
 
             {/* Password */}
-            <div className="relative">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <CiLock className="h-5 w-5 text-gray-400" />
+            <div>
+              <div className="relative">
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                  <CiLock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="password"
+                  placeholder="Input your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className={`focus:outline-none pl-12 h-12 rounded-lg w-full bg-[aliceblue] border-l-4 ${
+                    errors.password ? "border-l-red-500" : "border-l-[#ff0000]"
+                  }`}
+                />
               </div>
-              <input
-                type="password"
-                placeholder="Input your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="pl-12 h-12 border-l-4 border-l-blue-500 rounded-lg w-full bg-[aliceblue]"
-              />
             </div>
 
             {/* Signup Button */}
@@ -112,7 +173,7 @@ const router = useRouter()
             </button>
 
             {/* Message */}
-            {message && (
+            {message && modalType === null && (
               <div className="text-center mt-4 text-sm text-gray-700">{message}</div>
             )}
           </div>
@@ -130,12 +191,23 @@ const router = useRouter()
           <h1 className="text-4xl font-bold mb-4">WELCOME!</h1>
           <p className="text-lg mb-8 opacity-90">Enter your details and start your journey with us</p>
           <Link href="/login">
-          <button className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 rounded-lg font-semibold cursor-pointer">
-            LOG IN
-          </button>
+            <button className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 rounded-lg font-semibold cursor-pointer">
+              LOG IN
+            </button>
           </Link>
         </div>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <Modal
+          modalType={modalType}
+          message={message}
+          errors={errors}
+          onClose={handleModalClose}
+          onContinue={handleModalContinue}
+        />
+      )}
     </div>
   )
 }
