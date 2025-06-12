@@ -1,22 +1,20 @@
-// app/login/page.tsx
-"use client"
+"use client";
 
 import { useState } from "react";
 import { CiLock, CiMail } from "react-icons/ci";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
-import Modal from "../components/login-modal"; 
+import { useRouter } from "next/navigation";
+import Modal from "../components/login-modal";
 
-export default function LoginPage() { 
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState<"success" | "error" | "warning" | null>(null);
-  const [modalMessage, setModalMessage] = useState(""); 
+  const [modalMessage, setModalMessage] = useState("");
 
   const router = useRouter();
 
@@ -38,52 +36,38 @@ export default function LoginPage() {
     }
 
     setErrors(newErrors);
-
-    if (hasError) {
-      setModalMessage("Please correct the errors in the form.");
-      setModalType("error");
-      setShowModal(true);
-    } else {
-      setShowModal(false); 
-    }
-
-    return Object.keys(newErrors).length === 0;
+    return !hasError;
   };
 
   const handleSubmit = async () => {
-    
+    setErrors({});
     setShowModal(false);
     setModalType(null);
     setModalMessage("");
-    setErrors({}); 
 
-    if (!validate()) {
-      return; 
-    }
+    if (!validate()) return;
 
     setLoading(true);
 
     try {
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
 
       if (data.success) {
-        localStorage.setItem('token', data.token);
+        localStorage.setItem("token", data.token);
         setModalMessage("You've successfully logged in. Redirecting you to your dashboard...");
         setModalType("success");
         setShowModal(true);
-        // setTimeout(() => router.push('/dashboard'), 2000); // Redirect handled by Modal's onContinue
       } else {
         setModalMessage(data.message || "Login failed. Please check your credentials.");
         setModalType("error");
         setShowModal(true);
       }
-
     } catch (err) {
       setModalMessage("Something went wrong. Please try again later.");
       setModalType("error");
@@ -95,22 +79,18 @@ export default function LoginPage() {
 
   const handleModalClose = () => {
     setShowModal(false);
-    
-    if (modalType === "error") {
-      setErrors({});
-    }
   };
 
   const handleModalContinue = () => {
     setShowModal(false);
     if (modalType === "success") {
-      router.push("/dashboard"); 
+      router.push("/dashboard");
     }
   };
 
-
   return (
     <div className="min-h-screen flex flex-row-reverse">
+      {/* Left side form */}
       <div className="flex-1 flex items-center justify-center bg-gray-50 relative">
         <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full -translate-x-16 -translate-y-16"></div>
 
@@ -134,9 +114,7 @@ export default function LoginPage() {
                   }`}
                 />
               </div>
-              {/* Note: Client-side errors are now shown in the Modal, so these lines might be redundant
-               but keeping them for immediate form feedback if preferred. */}
-              {/* {errors.email && <p className="text-red-500 text-sm mt-2 pl-2">{errors.email}</p>} */}
+              {errors.email && <p className="text-red-500 text-sm mt-2 pl-2">{errors.email}</p>}
             </div>
 
             {/* Password */}
@@ -155,10 +133,10 @@ export default function LoginPage() {
                   }`}
                 />
               </div>
-              {/* {errors.password && <p className="text-red-500 text-sm mt-2 pl-2">{errors.password}</p>} */}
+              {errors.password && <p className="text-red-500 text-sm mt-2 pl-2">{errors.password}</p>}
             </div>
 
-            {/* Login Button */}
+            {/* Submit Button */}
             <button
               onClick={handleSubmit}
               className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"
@@ -167,23 +145,17 @@ export default function LoginPage() {
               {loading ? "Processing..." : "LOGIN"}
             </button>
 
-            {/* Message (Optional: remove if all messages are handled by modal) */}
-            {/* {message && (
-              <div className="text-center mt-4 text-sm text-gray-700">{message}</div>
-            )} */}
-
+            {/* Forgot Password */}
             <div className="text-center text-blue-600">
               <Link href="/forgot-password">
-                <button className="underline cursor-pointer">
-                  Forgot password
-                </button>
+                <button className="underline cursor-pointer">Forgot password</button>
               </Link>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right side */}
+      {/* Right side welcome message */}
       <div className="flex-1 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 flex items-center justify-center relative overflow-hidden">
         <div className="absolute top-20 right-20 w-40 h-40 bg-blue-500/30 rounded-full"></div>
         <div className="absolute bottom-20 left-20 w-60 h-60 bg-blue-400/20 rounded-full"></div>
@@ -201,12 +173,11 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Generic Modal */}
+      {/* Modal for API response only */}
       {showModal && (
         <Modal
           modalType={modalType}
           message={modalMessage}
-          errors={errors} 
           onClose={handleModalClose}
           onContinue={handleModalContinue}
         />

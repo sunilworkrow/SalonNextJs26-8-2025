@@ -1,9 +1,14 @@
-"use client"
+"use client";
 
-import { useState, useRef } from "react"
+import { useState, useRef } from "react";
 import {
-  CiUser, CiMail, CiCamera, CiSaveDown2, CiCalendar
-} from "react-icons/ci"
+  CiUser,
+  CiMail,
+  CiCamera,
+  CiSaveDown2,
+  CiCalendar,
+} from "react-icons/ci";
+import Modal from "../components/login-modal"; // ✅ Using your existing modal component
 
 interface ProfileFormProps {
   darkMode: boolean;
@@ -20,41 +25,63 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
     dateOfBirth: "",
     bio: "",
     image: "",
-  })
+  });
 
-  const [isSaving, setIsSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState("personal")
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState("personal");
 
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [modalType, setModalType] = useState<"success" | "warning" | null>(null);
+  const [modalMessage, setModalMessage] = useState("");
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+    setErrors((prev) => ({
+      ...prev,
+      [field]: "",
+    }));
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    // Fake upload (replace with actual upload to Cloudinary or your server)
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onloadend = () => {
-      const base64 = reader.result as string
-      setFormData((prev) => ({ ...prev, image: base64 }))
-    }
-    reader.readAsDataURL(file)
-  }
+      const base64 = reader.result as string;
+      setFormData((prev) => ({ ...prev, image: base64 }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const validateFields = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!formData.name) newErrors.name = "First name is required.";
+    if (!formData.lastName) newErrors.lastName = "Last name is required.";
+    if (!formData.dateOfBirth) newErrors.dateOfBirth = "Date of birth is required.";
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSave = async () => {
-    setIsSaving(true)
+    if (!validateFields()) return;
+
+    setIsSaving(true);
     try {
-      const token = localStorage.getItem("token") // Your JWT token
+      const token = localStorage.getItem("token");
       if (!token) {
-        alert("You are not logged in.")
-        setIsSaving(false)
-        return
+        setModalType("warning");
+        setModalMessage("You are not logged in.");
+        setIsSaving(false);
+        return;
       }
 
       const res = await fetch("/api/profile", {
@@ -70,40 +97,57 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
           description: formData.bio,
           image: formData.image || "https://example.com/default.jpg",
         }),
-      })
+      });
 
-      const data = await res.json()
+      const data = await res.json();
 
       if (res.ok) {
-        alert("Profile updated successfully!")
+        setModalType("success");
+        setModalMessage("Profile updated successfully!");
       } else {
-        alert(data.message || "Failed to update profile.")
+        setModalType("warning");
+        setModalMessage(data.message || "Failed to update profile.");
       }
     } catch (error) {
-      console.error("Update failed:", error)
-      alert("Something went wrong.")
+      console.error("Update failed:", error);
+      setModalType("warning");
+      setModalMessage("Something went wrong.");
     }
 
-    setIsSaving(false)
-  }
+    setIsSaving(false);
+  };
 
-  const tabs = [
-    { id: "personal", label: "Personal Information" },
-  ]
+  const tabs = [{ id: "personal", label: "Personal Information" }];
 
   return (
     <div className="max-w-4xl mx-auto">
+      {modalType && (
+        <Modal
+          modalType={modalType}
+          message={modalMessage}
+          errors={{}}
+          onClose={() => setModalType(null)}
+        />
+      )}
 
-      {/* Profile Header */}
-
-      <div className={`${darkMode ? "bg-[#1a1a1a]" : "bg-white"} rounded-lg p-6 mb-6 border ${darkMode ? "border-gray-800" : "border-gray-200"}`}>
+      <div
+        className={`${
+          darkMode ? "bg-[#1a1a1a]" : "bg-white"
+        } rounded-lg p-6 mb-6 border ${
+          darkMode ? "border-gray-800" : "border-gray-200"
+        }`}
+      >
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
               {formData.image ? (
-                <img src={formData.image} alt="Profile" className="w-full h-full object-cover rounded-full" />
+                <img
+                  src={formData.image}
+                  alt="Profile"
+                  className="w-full h-full object-cover rounded-full"
+                />
               ) : (
-                <span className="text-white font-bold text-2xl"></span>
+                <span className="text-white font-bold text-2xl" />
               )}
             </div>
             <button
@@ -128,9 +172,13 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
         </div>
       </div>
 
-      {/* Tabs */}
-      
-      <div className={`${darkMode ? "bg-[#1a1a1a]" : "bg-white"} rounded-lg border ${darkMode ? "border-gray-800" : "border-gray-200"} mb-6`}>
+      <div
+        className={`${
+          darkMode ? "bg-[#1a1a1a]" : "bg-white"
+        } rounded-lg border ${
+          darkMode ? "border-gray-800" : "border-gray-200"
+        } mb-6`}
+      >
         <div className="flex border-b border-gray-800">
           {tabs.map((tab) => (
             <button
@@ -151,52 +199,66 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
           {activeTab === "personal" && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* First Name */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     <CiUser className="inline mr-2" />
-                    First Name
+                    First Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    
                     className={`w-full px-3 py-2 rounded-lg border ${
-                      darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"
+                      darkMode
+                        ? "bg-[#252525] border-gray-700"
+                        : "bg-gray-50 border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
+                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
 
+                {/* Last Name */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     <CiUser className="inline mr-2" />
-                    Last Name
+                    Last Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
                     className={`w-full px-3 py-2 rounded-lg border ${
-                      darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"
+                      darkMode
+                        ? "bg-[#252525] border-gray-700"
+                        : "bg-gray-50 border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
+                  {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                 </div>
 
+                {/* Date of Birth */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     <CiCalendar size={16} className="inline mr-2" />
-                    Date of Birth
+                    Date of Birth <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
                     className={`w-full px-3 py-2 rounded-lg border ${
-                      darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"
+                      darkMode
+                        ? "bg-[#252525] border-gray-700"
+                        : "bg-gray-50 border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
+                  {errors.dateOfBirth && (
+                    <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
+                  )}
                 </div>
 
+                {/* Email (Disabled) */}
                 <div>
                   <label className="block text-sm font-medium mb-2">
                     <CiMail className="inline mr-2" />
@@ -207,20 +269,25 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                     value={user?.email || ""}
                     disabled
                     className={`w-full px-3 py-2 rounded-lg border text-[#9c9c9c] ${
-                      darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"
+                      darkMode
+                        ? "bg-[#252525] border-gray-700"
+                        : "bg-gray-50 border-gray-300"
                     } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
                 </div>
               </div>
 
+              {/* Bio */}
               <div>
-                <label className="block text-sm font-medium mb-2">Bio</label>
+                <label className="block text-sm font-medium mb-2">Bio <span className="text-red-500">*</span></label>
                 <textarea
                   value={formData.bio}
                   onChange={(e) => handleInputChange("bio", e.target.value)}
                   rows={4}
                   className={`w-full px-3 py-2 rounded-lg border resize-none ${
-                    darkMode ? "bg-[#252525] border-gray-700" : "bg-gray-50 border-gray-300"
+                    darkMode
+                      ? "bg-[#252525] border-gray-700"
+                      : "bg-gray-50 border-gray-300"
                   } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   placeholder="Tell us about yourself..."
                 />
@@ -228,6 +295,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
             </div>
           )}
 
+          {/* Save Button */}
           <div className="flex justify-end pt-6 border-t border-gray-700">
             <button
               onClick={handleSave}
@@ -250,5 +318,5 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

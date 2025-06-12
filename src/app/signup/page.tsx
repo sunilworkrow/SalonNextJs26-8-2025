@@ -4,7 +4,7 @@ import { useState } from "react"
 import { CiLock, CiMail, CiUser } from "react-icons/ci"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import Modal from "../components/signup-modal"  // yaha modal ko import karein
+import Modal from "../components/signup-modal"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -15,7 +15,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState("")
   const [showModal, setShowModal] = useState(false)
-  const [modalType, setModalType] = useState<"success" | "error" | "warning" | null>(null)
+  const [modalType, setModalType] = useState<"success" | "warning" | null>(null)
   const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({})
 
   const validate = () => {
@@ -40,9 +40,6 @@ export default function SignupPage() {
 
   const handleSubmit = async () => {
     if (!validate()) {
-      setMessage("Please fix the errors below")
-      setModalType("error")
-      setShowModal(true)
       return
     }
 
@@ -73,16 +70,10 @@ export default function SignupPage() {
           setMessage(data.message)
           setModalType("warning")
           setShowModal(true)
-        } else {
-          setMessage(data.message || "Something went wrong")
-          setModalType("error")
-          setShowModal(true)
         }
       }
     } catch (err) {
-      setMessage("Something went wrong")
-      setModalType("error")
-      setShowModal(true)
+      console.error("Signup error:", err)
     }
 
     setLoading(false)
@@ -125,6 +116,7 @@ export default function SignupPage() {
                   }`}
                 />
               </div>
+              {errors.name && <p className="text-red-500 text-sm mt-2 pl-2">{errors.name}</p>}
             </div>
 
             {/* Email */}
@@ -143,6 +135,7 @@ export default function SignupPage() {
                   }`}
                 />
               </div>
+              {errors.email && <p className="text-red-500 text-sm mt-2 pl-2">{errors.email}</p>}
             </div>
 
             {/* Password */}
@@ -161,6 +154,7 @@ export default function SignupPage() {
                   }`}
                 />
               </div>
+              {errors.password && <p className="text-red-500 text-sm mt-2 pl-2">{errors.password}</p>}
             </div>
 
             {/* Signup Button */}
@@ -171,11 +165,6 @@ export default function SignupPage() {
             >
               {loading ? "Processing..." : "SIGN UP"}
             </button>
-
-            {/* Message */}
-            {message && modalType === null && (
-              <div className="text-center mt-4 text-sm text-gray-700">{message}</div>
-            )}
           </div>
         </div>
       </div>
