@@ -48,7 +48,9 @@ export async function POST(req: Request) {
       htmlContent: `
         <h2>Password Reset</h2>
         <p>Click the link below to reset your password:</p>
-        <a href="${resetLink}">${resetLink}</a>
+        <a href="${resetLink}">
+        <button> Click on Reset password  </button>
+        </a>
         <p>This link will expire in 1 hour.</p>
       `,
     });
