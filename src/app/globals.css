@@ -3,7 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+   --color-mobile: #8884d8;
+  --color-desktop: #82ca9d;
+  --color-desktop: #82ca9d;
 }
+
+
+
 
 @theme inline {
   --color-background: var(--background);
@@ -24,3 +30,17 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes grow {
+  0% {
+    transform: scale(0.8);
+  }
+  100% {
+    transform: scale(1.2);
+  }
+}
+
+.animate-grow {
+  animation: grow 0.8s ease-in-out infinite alternate;
+}
+

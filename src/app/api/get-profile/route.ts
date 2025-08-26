@@ -1,6 +1,17 @@
-import { NextResponse } from 'next/server'
-import db from '@/app/lib/db'
-import jwt from 'jsonwebtoken'
+// app/api/get-profile/route.ts
+import { NextResponse } from "next/server";
+import jwt from "jsonwebtoken";
+import { db } from "@/app/lib/db";
+import { RowDataPacket } from "mysql2";
+
+// const ACCESS_TOKEN_SECRET = process.env.JWT_SECRET || "access_dummy_key";
+
+
+interface JwtPayload {
+  email: string;
+}
+
+
 
 export async function GET(req: Request) {
   try {
@@ -10,11 +21,12 @@ export async function GET(req: Request) {
     }
 
     const token = authHeader.split(' ')[1]
-    const decoded: any = jwt.verify(token, process.env.JWT_SECRET!)
+    
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
 
     const userEmail = decoded.email
 
-    const [rows]: any = await db.query('SELECT name, lastName, dob, description, image FROM signup WHERE email = ?', [userEmail])
+    const [rows]: [RowDataPacket[], unknown] = await (await db).query('SELECT name, lastName, dob, description, image FROM signup WHERE email = ?', [userEmail])
 
     if (rows.length === 0) {
       return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 })
@@ -22,7 +34,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ success: true, data: rows[0] })
 
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ success: false, message: (error as Error).message }, { status: 500 })
   }
 }

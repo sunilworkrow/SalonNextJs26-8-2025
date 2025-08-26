@@ -1,7 +1,9 @@
 // app/api/signup/route.ts
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
-import db from '@/app/lib/db'
+import { db } from '@/app/lib/db';
+
+import { RowDataPacket } from "mysql2";
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +18,7 @@ export async function POST(req: Request) {
     }
 
     // Check if user already exists
-    const [existingUser]: any = await db.query('SELECT * FROM signup WHERE email = ?', [email]);
+    const [existingUser]: [RowDataPacket[], unknown] = await (await db).query('SELECT * FROM signup WHERE email = ?', [email]);
     if (existingUser.length > 0) {
       return NextResponse.json(
         { success: false, message: 'User already exists' },
@@ -28,10 +30,11 @@ export async function POST(req: Request) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Insert user
-    await db.query('INSERT INTO signup (name, email, password) VALUES (?, ?, ?)', [
+    await (await db).query('INSERT INTO signup (name, email, password, role) VALUES (?, ?, ?, ?)', [
       name,
       email,
       hashedPassword,
+      "admin"
     ]);
 
     return NextResponse.json({
@@ -41,9 +44,9 @@ export async function POST(req: Request) {
   } 
   
   
-  catch (error: any) {
+  catch (error: unknown) {
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: (error as Error).message },
       { status: 500 }
     );
   }

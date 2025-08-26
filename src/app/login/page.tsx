@@ -72,6 +72,7 @@ export default function LoginPage() {
       setModalMessage("Something went wrong. Please try again later.");
       setModalType("error");
       setShowModal(true);
+      console.error("Error deleting:", err);
     }
 
     setLoading(false);

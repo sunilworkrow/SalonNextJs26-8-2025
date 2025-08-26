@@ -8,19 +8,15 @@ import {
   CiSaveDown2,
   CiCalendar,
 } from "react-icons/ci";
-import Modal from "../components/login-modal"; // ✅ Using your existing modal component
+import Modal from "@/app/components/login-modal";
+import { useUser } from "@/app/context/UserContext";
+import Image from "next/image";
 
-interface ProfileFormProps {
-  darkMode: boolean;
-  user: {
-    email: string | number | readonly string[] | undefined;
-    name: string;
-  };
-}
+export default function ProfileForm() {
+  const { user } = useUser();
 
-export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
   const [formData, setFormData] = useState({
-    name: "",
+    name: user?.name || "",
     lastName: "",
     dateOfBirth: "",
     bio: "",
@@ -130,24 +126,23 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
         />
       )}
 
-      <div
-        className={`${
-          darkMode ? "bg-[#1a1a1a]" : "bg-white"
-        } rounded-lg p-6 mb-6 border ${
-          darkMode ? "border-gray-800" : "border-gray-200"
-        }`}
-      >
+      {/* Profile Card */}
+      <div className="rounded-lg p-6 mb-6 border bg-[#1a1a1a] border-gray-800">
         <div className="flex flex-col md:flex-row items-center gap-6">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
               {formData.image ? (
-                <img
+                <Image
                   src={formData.image}
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full"
+                  width={60}
+                  height={60}
                 />
               ) : (
-                <span className="text-white font-bold text-2xl" />
+                <span className="text-white font-bold text-2xl">
+                  {user?.name?.charAt(0).toUpperCase() || "U"}
+                </span>
               )}
             </div>
             <button
@@ -172,13 +167,8 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
         </div>
       </div>
 
-      <div
-        className={`${
-          darkMode ? "bg-[#1a1a1a]" : "bg-white"
-        } rounded-lg border ${
-          darkMode ? "border-gray-800" : "border-gray-200"
-        } mb-6`}
-      >
+      {/* Tabs + Form */}
+      <div className="rounded-lg border mb-6 border-gray-800 bg-[#1a1a1a]">
         <div className="flex border-b border-gray-800">
           {tabs.map((tab) => (
             <button
@@ -209,11 +199,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                     type="text"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      darkMode
-                        ? "bg-[#252525] border-gray-700"
-                        : "bg-gray-50 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    className="w-full px-3 py-2 rounded-lg border bg-[#252525] border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
                 </div>
@@ -228,11 +214,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => handleInputChange("lastName", e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      darkMode
-                        ? "bg-[#252525] border-gray-700"
-                        : "bg-gray-50 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    className="w-full px-3 py-2 rounded-lg border bg-[#252525] border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                 </div>
@@ -247,11 +229,7 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                     type="date"
                     value={formData.dateOfBirth}
                     onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                    className={`w-full px-3 py-2 rounded-lg border ${
-                      darkMode
-                        ? "bg-[#252525] border-gray-700"
-                        : "bg-gray-50 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    className="w-full px-3 py-2 rounded-lg border bg-[#252525] border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {errors.dateOfBirth && (
                     <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
@@ -268,27 +246,21 @@ export default function ProfileForm({ user, darkMode }: ProfileFormProps) {
                     type="email"
                     value={user?.email || ""}
                     disabled
-                    className={`w-full px-3 py-2 rounded-lg border text-[#9c9c9c] ${
-                      darkMode
-                        ? "bg-[#252525] border-gray-700"
-                        : "bg-gray-50 border-gray-300"
-                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    className="w-full px-3 py-2 rounded-lg border text-[#909090] bg-[#252525] border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
 
               {/* Bio */}
               <div>
-                <label className="block text-sm font-medium mb-2">Bio <span className="text-red-500">*</span></label>
+                <label className="block text-sm font-medium mb-2">
+                  Bio <span className="text-red-500">*</span>
+                </label>
                 <textarea
                   value={formData.bio}
                   onChange={(e) => handleInputChange("bio", e.target.value)}
                   rows={4}
-                  className={`w-full px-3 py-2 rounded-lg border resize-none ${
-                    darkMode
-                      ? "bg-[#252525] border-gray-700"
-                      : "bg-gray-50 border-gray-300"
-                  } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                  className="w-full px-3 py-2 rounded-lg border bg-[#252525] border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Tell us about yourself..."
                 />
               </div>

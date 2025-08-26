@@ -1,7 +1,8 @@
 // app/api/reset-password/route.ts
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
-import db from '@/app/lib/db';
+import { db } from '@/app/lib/db';
+import { RowDataPacket } from "mysql2";
 
 export async function POST(req: Request) {
   try {
@@ -11,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: 'All fields are required' }, { status: 400 });
     }
 
-    const [userResult]: any = await db.query(
+    const [userResult]: [RowDataPacket[], unknown] = await (await db).query(
       'SELECT * FROM signup WHERE email = ? AND reset_token = ? AND reset_token_expiry > NOW()',
       [email, token]
     );
@@ -22,13 +23,13 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    await db.query(
+    await (await db).query(
       'UPDATE signup SET password = ?, reset_token = NULL, reset_token_expiry = NULL WHERE email = ?',
       [hashedPassword, email]
     );
 
     return NextResponse.json({ success: true, message: 'Password reset successful' });
-  } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ success: false, message: (error as Error).message }, { status: 500 });
   }
 }

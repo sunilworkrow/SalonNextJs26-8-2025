@@ -1,7 +1,6 @@
 "use client"
 
 import { FaCheck } from "react-icons/fa6"
-import { CiWarning } from "react-icons/ci"
 import { IoIosWarning } from "react-icons/io"
 
 type ModalProps = {
@@ -12,7 +11,7 @@ type ModalProps = {
   onContinue?: () => void
 }
 
-export default function Modal({ modalType, message, onClose, onContinue }: ModalProps) {
+export default function Modal({ modalType, message, onContinue }: ModalProps) {
   const handleContinue = () => {
     if (onContinue) onContinue()
   }

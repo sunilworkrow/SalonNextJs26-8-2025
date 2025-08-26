@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 
-const db = mysql.createPool({
+export const db = mysql.createConnection({
   host: 'localhost',      
   user: 'root',           
   password: '',           
@@ -8,4 +8,11 @@ const db = mysql.createPool({
 });
 
 
-export default db;
+export const salonDB = mysql.createConnection({
+  host: 'localhost',
+  user: 'root',
+  password: '',
+  database: 'salon', 
+});
+
+
